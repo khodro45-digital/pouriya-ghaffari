@@ -1,0 +1,983 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>گزارش تحلیلی ورودی شعب خودرو45</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --line: #2a303c;
+      --text: #e8eaed;
+      --muted: #9aa3b2;
+      --accent: #5b8def;
+      --ok: #3dbe82;
+      --warn: #d4a017;
+      --bad: #e35d6a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, "Iran Sans", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 20px; margin: 36px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 20px 0 10px; color: var(--muted); }
+    .sub { color: var(--muted); margin-bottom: 20px; }
+    .action-box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 12px 0;
+    }
+    .action-box h3 {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 16px;
+    }
+    .action-box .sub { margin-bottom: 0; }
+    .action-box .stats { margin-top: 12px; margin-bottom: 0; }
+    .action-box .bullets { margin: 10px 0 0; }
+    .gantt-wrap { overflow-x: auto; margin-top: 8px; }
+    .gantt {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .gantt th, .gantt td {
+      border: 1px solid var(--line);
+      padding: 8px 6px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .gantt th { background: #1d2230; color: var(--muted); font-weight: 600; }
+    .gantt td.name { text-align: right; white-space: nowrap; font-weight: 600; background: #1a1f2a; }
+    .gantt .bar {
+      background: #35507a;
+      color: #e8eaed;
+      border-radius: 4px;
+      padding: 6px 4px;
+      line-height: 1.35;
+      font-size: 11px;
+    }
+    .gantt .bar.span2 { background: #2f6b4f; }
+    .gantt .bar.span4 { background: #5a4a22; }
+    .gantt .empty { background: transparent; }
+    .callout {
+      background: #2a2316;
+      border: 1px solid #5a4a22;
+      border-right: 4px solid var(--warn);
+      padding: 14px 16px;
+      border-radius: 8px;
+      margin: 16px 0 24px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 16px 0 8px;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .stat .v { font-size: 26px; font-weight: 700; }
+    .stat .l { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .ok .v { color: var(--ok); }
+    .warn .v { color: var(--warn); }
+    .bad .v { color: var(--bad); }
+    .info .v { color: var(--accent); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 12px 0 8px;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+    }
+    th { background: #1d2230; color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    tr.bad td:first-child { box-shadow: inset -3px 0 0 var(--bad); }
+    tr.ok td:first-child { box-shadow: inset -3px 0 0 var(--ok); }
+    tr.warn td:first-child { box-shadow: inset -3px 0 0 var(--warn); }
+    .zones {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .zone {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .zone h4 { margin: 0 0 8px; font-size: 15px; }
+    .zone .big { font-size: 22px; font-weight: 700; }
+    .zone .m { color: var(--muted); font-size: 13px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .pill {
+      border: 1px solid var(--line);
+      background: #1a1f2a;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+    }
+    .pill.ok { border-color: #2f6b4f; color: var(--ok); }
+    .pill.info { border-color: #35507a; color: var(--accent); }
+    .pill.warn { border-color: #6b5a22; color: var(--warn); }
+    .chart {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 12px 0;
+    }
+    .combo-legend {
+      display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 13px; color: var(--muted);
+    }
+    .combo-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .combo-legend i {
+      display: inline-block; width: 14px; height: 10px; border-radius: 2px;
+    }
+    .combo-legend i.line {
+      height: 0; border-top: 3px solid; width: 16px; border-radius: 0;
+    }
+    #comboChart { width: 100%; height: 280px; display: block; }
+    .combo-axis { fill: var(--muted); font-size: 11px; }
+    .combo-grid { stroke: var(--line); stroke-width: 1; }
+    .note { color: var(--muted); font-size: 13px; }
+    @media (max-width: 900px) {
+      .stats, .zones, .grid2 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .stats, .zones, .grid2 { grid-template-columns: 1fr; }
+    }
+    .branch-controls {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: end;
+      margin: 12px 0; padding: 12px; background: var(--panel);
+      border: 1px solid var(--line); border-radius: 10px;
+    }
+    .branch-controls label.hidden-ctrl { display: none; }
+    details.branch-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+    details.branch-panel > summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 14px 16px;
+      background: #1d2230;
+      color: var(--text);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      user-select: none;
+    }
+    details.branch-panel > summary::-webkit-details-marker { display: none; }
+    details.branch-panel > summary::after {
+      content: "▼";
+      color: var(--muted);
+      font-size: 12px;
+      transition: transform .15s ease;
+    }
+    details.branch-panel[open] > summary::after { transform: rotate(180deg); }
+    details.branch-panel .panel-body { padding: 12px 14px 16px; }
+    .branch-controls select, .branch-controls input {
+      background: #12151c; color: var(--text); border: 1px solid var(--line);
+      border-radius: 6px; padding: 8px 10px; min-width: 160px; font-size: 14px;
+    }
+    .table-scroll { overflow: auto; max-height: 640px; border: 1px solid var(--line); border-radius: 10px; }
+    #branchWeekTable { margin: 0; font-size: 13px; }
+    #branchWeekTable thead th {
+      position: sticky; top: 0; z-index: 2; background: #1d2230;
+    }
+    #branchWeekTable td.num, #branchWeekTable th.num { text-align: left; font-variant-numeric: tabular-nums; }
+    #branchWeekTable tr.city-start td { border-top: 2px solid #3a4254; }
+    #branchWeekTable .zone-tag { color: var(--accent); font-size: 12px; }
+    #zoneFilterWrap, #branchFilterWrap { display: none; }
+    #zoneFilterWrap.show, #branchFilterWrap.show { display: flex; flex-direction: column; }
+    .week-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+    .week-chips label.chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #12151c; border: 1px solid var(--line);
+      border-radius: 999px; padding: 6px 12px; font-size: 12px; color: var(--muted);
+      cursor: pointer; flex-direction: row; min-width: 0;
+    }
+    .week-chips label.chip input { accent-color: var(--accent); }
+    .city-acc { margin: 8px 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .city-acc > summary {
+      cursor: pointer; list-style: none; padding: 10px 14px;
+      background: #1d2230; display: flex; justify-content: space-between; gap: 10px;
+      font-weight: 600; user-select: none;
+    }
+    .city-acc > summary::-webkit-details-marker { display: none; }
+    .city-acc > summary::after { content: "▼"; color: var(--muted); font-size: 11px; }
+    .city-acc[open] > summary::after { transform: rotate(180deg); display: inline-block; }
+    .city-acc .city-meta { color: var(--muted); font-weight: 400; font-size: 12px; }
+    .city-acc table { margin: 0; border: none; border-radius: 0; }
+    #zoneReviewTable { margin-top: 8px; }
+    .bullets { margin: 12px 0; padding-right: 18px; }
+    .bullets li { margin: 8px 0; }
+    .split-box {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0;
+    }
+    .split-box .box {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px;
+    }
+    .split-box h3 { margin-top: 0; }
+    @media (max-width: 700px) { .split-box { grid-template-columns: 1fr; } }
+    @media print {
+      body { background: #fff; color: #111; }
+      .stat, .zone, table, .chart, .callout { background: #fff; border-color: #ccc; }
+      .sub, .note, th, .zone .m, .bar-label { color: #555; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>گزارش تحلیلی ورودی شعب خودرو45</h1>
+    <p class="sub">۱ مرداد تا ۱۷ شهریور ۱۴۰۵</p>
+
+    <h2>۱) ترند هفته‌به‌هفته شبکه</h2>
+    <p class="sub">روزکاری = شنبه–چهارشنبه ۱.۰ + پنجشنبه و جمعه با هم ۰.۶ · بدون کسر تعطیلی میانی · ظرفیت واقعی ورود = ظرفیت رزرو × ۶۴٪ × ۷۶٪</p>
+    <table>
+      <thead>
+        <tr>
+          <th>هفته</th><th>روزکاری</th><th>لید</th><th>ورود</th><th>ورود/روزکاری</th><th>لید→ورود</th><th>ورود→خرید</th><th>WoW ورود/روز</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>۳ تا ۹ مرداد</td><td>5.6</td><td>24.5K</td><td>5153</td><td>920</td><td>21%</td><td>21%</td><td>پایه</td></tr>
+        <tr><td>۱۰ تا ۱۶ مرداد</td><td>5.6</td><td>28.0K</td><td>5408</td><td>966</td><td>19%</td><td>21%</td><td>+5.0%</td></tr>
+        <tr class="bad"><td>۱۷ تا ۲۳ مرداد</td><td>5.6</td><td>20.5K</td><td>3364</td><td>601</td><td>16%</td><td>22%</td><td>−37.8%</td></tr>
+        <tr class="ok"><td>۲۴ تا ۳۰ مرداد</td><td>5.6</td><td>26.8K</td><td>5978</td><td>1068</td><td>22%</td><td>26%</td><td>+77.7%</td></tr>
+        <tr class="bad"><td>۳۱ مرداد تا ۶ شهریور</td><td>5.6</td><td>21.4K</td><td>4976</td><td>889</td><td>23%</td><td>30%</td><td>−16.8%</td></tr>
+        <tr class="warn"><td>۷ تا ۱۳ شهریور</td><td>5.6</td><td>21.0K</td><td>4415</td><td>788</td><td>21%</td><td>32%</td><td>−11.4%</td></tr>
+        <tr><td>۱۴ تا ۱۷ شهریور</td><td>4.0</td><td>13.1K</td><td>3010</td><td>752</td><td>23%</td><td>35%</td><td>−4.6%</td></tr>
+      </tbody>
+    </table>
+    <div class="chart" style="margin-top:16px">
+      <div class="combo-legend">
+        <span><i style="background:#5b8def"></i> ورود / روزکاری (محور چپ)</span>
+        <span><i class="line" style="border-color:#3dbe82"></i> لید → ورود %</span>
+        <span><i class="line" style="border-color:#d4a017"></i> ورود → خرید %</span>
+      </div>
+      <svg id="comboChart" viewBox="0 0 1000 280" role="img" aria-label="ترند ورود و کانورژن هفتگی"></svg>
+    </div>
+
+    <h2>۲) شهرها — لید در برابر ورود (۳ مرداد تا ۱۷ شهریور)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>شهر</th>
+          <th>ورود</th>
+          <th>لید</th>
+          <th>لید→ورود</th>
+          <th>ورود→خرید</th>
+          <th>جذب از لید</th>
+          <th>ورود به شعبه در روزکاری</th>
+          <th>میانگین ورود/روز شهر</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="ok"><td>تهران</td><td>14,548</td><td>54,790</td><td>26.6%</td><td>28.8%</td><td>7.7%</td><td>10.75</td><td>335</td></tr>
+        <tr><td>اهواز</td><td>1,944</td><td>8,500</td><td>22.9%</td><td>31.0%</td><td>7.1%</td><td>12.93</td><td>46</td></tr>
+        <tr><td>کرج</td><td>2,372</td><td>9,933</td><td>23.9%</td><td>29.0%</td><td>6.9%</td><td>12.62</td><td>55</td></tr>
+        <tr><td>قزوین</td><td>554</td><td>2,458</td><td>22.5%</td><td>29.1%</td><td>6.5%</td><td>14.73</td><td>13</td></tr>
+        <tr class="ok"><td>اراک</td><td>572</td><td>2,224</td><td>25.7%</td><td>22.0%</td><td>5.7%</td><td>15.21</td><td>13</td></tr>
+        <tr><td>شیراز</td><td>2,038</td><td>9,947</td><td>20.5%</td><td>27.2%</td><td>5.6%</td><td>10.84</td><td>47</td></tr>
+        <tr><td>اصفهان</td><td>2,305</td><td>10,875</td><td>21.2%</td><td>22.2%</td><td>4.7%</td><td>8.76</td><td>54</td></tr>
+        <tr><td>یزد</td><td>431</td><td>2,477</td><td>17.4%</td><td>21.8%</td><td>3.8%</td><td>11.46</td><td>10</td></tr>
+        <tr><td>همدان</td><td>420</td><td>2,479</td><td>16.9%</td><td>21.7%</td><td>3.7%</td><td>11.17</td><td>10</td></tr>
+        <tr class="bad"><td>رشت</td><td>525</td><td>4,271</td><td>12.3%</td><td>30.1%</td><td>3.7%</td><td>13.96</td><td>12</td></tr>
+        <tr class="bad"><td>کرمانشاه</td><td>466</td><td>3,700</td><td>12.6%</td><td>28.5%</td><td>3.6%</td><td>12.39</td><td>11</td></tr>
+        <tr><td>قم</td><td>577</td><td>3,547</td><td>16.3%</td><td>21.3%</td><td>3.5%</td><td>15.35</td><td>13</td></tr>
+        <tr class="bad"><td>مشهد</td><td>1,590</td><td>13,560</td><td>11.7%</td><td>17.7%</td><td>2.1%</td><td>10.57</td><td>37</td></tr>
+        <tr class="bad"><td>کرمان</td><td>514</td><td>5,545</td><td>9.3%</td><td>20.2%</td><td>1.9%</td><td>13.67</td><td>12</td></tr>
+        <tr class="bad"><td>تبریز</td><td>815</td><td>6,200</td><td>13.1%</td><td>11.7%</td><td>1.5%</td><td>10.84</td><td>19</td></tr>
+      </tbody>
+    </table>
+
+    <h2>۳) تهران — ۵ منطقه</h2>
+    <div class="branch-controls" style="margin-top:8px">
+      <label>هفته
+        <select id="zoneWeekFilter"></select>
+      </label>
+    </div>
+    <div class="zones" id="zoneCards"></div>
+    <table id="zoneMainTable">
+      <thead>
+        <tr>
+          <th>منطقه</th>
+          <th>تعداد شعبه</th>
+          <th>ورود هفته</th>
+          <th>ورود / روزکاری</th>
+          <th>% از کل</th>
+          <th>میانگین ورود به شعبه / روز</th>
+        </tr>
+      </thead>
+      <tbody id="zoneMainBody"></tbody>
+    </table>
+
+    <h2>۴) ورود هفته‌به‌هفته تمام شعب</h2>
+    <p class="sub">ظرفیت واقعی ورود هر شعبه = ظرفیت رزرو روزانه × ۶۴٪ (رزرو→تایید مراجعه) × ۷۶٪ (تایید→ورود) · داده ظرفیت از ۲۲ مرداد</p>
+    <details class="branch-panel" open>
+      <summary>
+        <span>جدول ورود روزانه شعب</span>
+        <span class="note" id="branchCount" style="font-weight:400"></span>
+      </summary>
+      <div class="panel-body">
+        <div class="branch-controls">
+          <label>هفته
+            <select id="weekFilter"></select>
+          </label>
+          <label>شهر
+            <select id="cityFilter"><option value="">همه شهرها</option></select>
+          </label>
+          <label id="zoneFilterWrap">منطقه تهران
+            <select id="zoneFilter">
+              <option value="">همه مناطق</option>
+              <option value="West">غرب</option>
+              <option value="North">شمال</option>
+              <option value="East">شرق</option>
+              <option value="South">جنوب</option>
+              <option value="Center">مرکز</option>
+            </select>
+          </label>
+          <label id="branchFilterWrap">شعبه
+            <select id="branchFilter"><option value="">همه شعب</option></select>
+          </label>
+          <label>جستجو
+            <input id="branchSearch" type="search" placeholder="نام شعبه..." />
+          </label>
+        </div>
+        <div id="cityAccordion"></div>
+      </div>
+    </details>
+
+    <h3>مناطق تهران · ورود به روزکاری به شعبه</h3>
+    <table id="zoneReviewTable">
+      <thead>
+        <tr>
+          <th>منطقه</th>
+          <th>تعداد شعبه</th>
+          <th>ورود به روزکاری به شعبه</th>
+          <th>ورود هفته (جمع)</th>
+        </tr>
+      </thead>
+      <tbody id="zoneReviewBody"></tbody>
+    </table>
+
+    <h2>۵) دلایل افت ورودی در دو هفته اخیر</h2>
+    <div id="dropReasons">
+      <h3>کاهش ورودی ارگانیک</h3>
+      <div class="stats">
+        <div class="stat info"><div class="v">7,442</div><div class="l">جمع این هفته · شنبه–سه‌شنبه (۱۴ تا ۱۷ شهریور)</div></div>
+        <div class="stat ok"><div class="v">+4.2%</div><div class="l">نسبت به هفته قبل (+۳۰۱ OTP)</div></div>
+        <div class="stat bad"><div class="v">−27.6%</div><div class="l">نسبت به سه هفته قبل (−۲,۸۴۱ OTP)</div></div>
+        <div class="stat warn"><div class="v">7,141</div><div class="l">هفته قبل · ۷ تا ۱۰ شهریور (کف چهار هفته)</div></div>
+      </div>
+      <div class="chart" style="background:#1f1f1f;border-color:#2e2e2e">
+        <p class="note" style="color:#a3a3a3;margin:0 0 8px">محور Y: OTP ارگانیک (شنبه–سه‌شنبه) · محور X: هفته</p>
+        <svg id="otpChart" viewBox="0 0 640 260" width="100%" height="260" role="img" aria-label="ترند OTP ارگانیک"></svg>
+      </div>
+      <table>
+        <thead>
+          <tr><th>هفته</th><th>بازه</th><th>OTP ارگانیک (شنبه–سه‌شنبه)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>سه هفته قبل</td><td>۲۴ تا ۲۷ مرداد</td><td>10,283</td></tr>
+          <tr><td>دو هفته قبل</td><td>۳۱ مرداد تا ۳ شهریور</td><td>8,924</td></tr>
+          <tr class="bad"><td>هفته قبل</td><td>۷ تا ۱۰ شهریور</td><td>7,141</td></tr>
+          <tr><td>این هفته</td><td>۱۴ تا ۱۷ شهریور</td><td>7,442</td></tr>
+        </tbody>
+      </table>
+
+      <h3>کاهش نرخ CTR</h3>
+      <div class="stats">
+        <div class="stat bad"><div class="v">−44%</div><div class="l">افت CR پیامک · ۰.۰۹٪ → ۰.۰۵٪</div></div>
+        <div class="stat warn"><div class="v">۲.۶×</div><div class="l">افزایش حجم ارسال پیامک</div></div>
+        <div class="stat bad"><div class="v">۰.۰۴۹٪ → ۰.۰۳۱٪</div><div class="l">افت OTP/ارسال بله (PV)</div></div>
+        <div class="stat warn"><div class="v">۹۴.۸٪ → ۸۸.۹٪</div><div class="l">افت OTP/QR بله</div></div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>کانال</th><th>بازه / تاریخ</th><th>ارسال</th><th>OTP</th><th>نرخ (CTR/CR)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ری‌تارگتینگ پیامکی</td><td>شنبه–سه‌شنبه هفته قبل (۷ تا ۱۰ شهریور)</td><td>500,000</td><td>445</td><td>0.09%</td></tr>
+          <tr class="warn"><td>ری‌تارگتینگ پیامکی</td><td>شنبه–سه‌شنبه این هفته (۱۴ تا ۱۷ شهریور)</td><td>1,300,000</td><td>656</td><td>0.05%</td></tr>
+          <tr><td>بله (PV)</td><td>۶ شهریور ۱۴۰۵</td><td>700,000</td><td>344</td><td>0.049% · OTP/QR 94.77%</td></tr>
+          <tr class="warn"><td>بله (PV)</td><td>۱۶ شهریور ۱۴۰۵</td><td>600,000</td><td>185</td><td>0.031% · OTP/QR 88.94%</td></tr>
+        </tbody>
+      </table>
+      <ul class="bullets">
+        <li>پیامک: حجم ارسال حدود ۲.۶ برابر شده، ولی نرخ تبدیل از ۰.۰۹٪ به ۰.۰۵٪ رسیده (حدود ۴۴٪ افت).</li>
+        <li>بله: با وجود ارسال کمتر در ۱۶ شهریور، OTP/ارسال و OTP/QR هر دو افت کرده‌اند.</li>
+      </ul>
+    </div>
+
+    <h2>۶) اقدامات پیشنهادی سریع</h2>
+    <div id="quickActions">
+      <div class="action-box">
+        <h3>بازکردن کیلومتر بیشتر برای شعب تهران با ظرفیت خالی و شهرهای با ظرفیت خالی</h3>
+        <p class="sub">لیدهای ماهانه که به‌خاطر کیلومتر بالای ۳۰۰هزار QR نمی‌شوند (اتوماتیک‌ها کنار گذاشته شده) ÷ کانورژن لید→ورود شبکه</p>
+        <div class="stats">
+          <div class="stat info"><div class="v">۱۳٬۲۷۴</div><div class="l">لید ماهانه · not QR به‌خاطر KM &gt; ۳۰۰هزار</div></div>
+          <div class="stat"><div class="v">۲۳٪</div><div class="l">کانورژن لید→ورود شبکه (۱۴ تا ۱۷ شهریور)</div></div>
+          <div class="stat ok"><div class="v">۳٬۰۵۳</div><div class="l">ورود ماهانه مورد انتظار بعد از بازکردن KM</div></div>
+          <div class="stat warn"><div class="v">≈۱۱۹</div><div class="l">ورود روزانه معادل (÷۲۵.۶)</div></div>
+        </div>
+        <p class="sub" style="margin:14px 0 6px">پارامترهای کنترلی</p>
+        <ul class="bullets">
+          <li>بررسی نرخ آچار نسبت به نرخ میانگین</li>
+          <li>بررسی ROI این تغییر</li>
+        </ul>
+      </div>
+
+      <div class="action-box">
+        <h3>پذیرش در شهرهای پوششی</h3>
+        <p class="sub">شهرهایی با شعاع هوایی تا ۵۰ کیلومتر فاصله از شهر دارای شعبه</p>
+      </div>
+
+      <div class="action-box">
+        <h3>افزایش پخش روزانه تبلیغات تلویزیونی</h3>
+        <p class="sub">از میانگین روزی ۱۴ به ۳۳</p>
+        <ul class="bullets">
+          <li>این پیشنهاد بر اساس GRP بهینه ارائه می‌شود.</li>
+        </ul>
+      </div>
+
+      <div class="action-box">
+        <h3>تست چنل‌های جدید</h3>
+      </div>
+
+      <div class="action-box">
+        <h3>بهینه‌سازی و افزایش حجم چنل‌ها با CPE پایین</h3>
+      </div>
+    </div>
+
+    <h2>۷) اقدامات میان‌مدت</h2>
+    <div id="mediumActions">
+      <div class="action-box">
+        <h3>شهرهای با مشکل نرخ تبدیل (نه کمبود لید)</h3>
+        <p class="sub">بر اساس بخش ۲ گزارش · لید کافی، لید→ورود ضعیف‌تر از شبکه (۳ مرداد تا ۱۷ شهریور)</p>
+        <ul class="bullets">
+          <li>کرمان — لید ۵٬۵۴۵ · لید→ورود ۹.۳٪ · جذب از لید ۱.۹٪</li>
+          <li>مشهد — لید ۱۳٬۵۶۰ · لید→ورود ۱۱.۷٪ · جذب از لید ۲.۱٪</li>
+          <li>رشت — لید ۴٬۲۷۱ · لید→ورود ۱۲.۳٪ · جذب از لید ۳.۷٪</li>
+          <li>کرمانشاه — لید ۳٬۷۰۰ · لید→ورود ۱۲.۶٪ · جذب از لید ۳.۶٪</li>
+          <li>تبریز — لید ۶٬۲۰۰ · لید→ورود ۱۳.۱٪ · جذب از لید ۱.۵٪</li>
+          <li>قم — لید ۳٬۵۴۷ · لید→ورود ۱۶.۳٪ · جذب از لید ۳.۵٪</li>
+          <li>همدان — لید ۲٬۴۷۹ · لید→ورود ۱۶.۹٪ · جذب از لید ۳.۷٪</li>
+          <li>یزد — لید ۲٬۴۷۷ · لید→ورود ۱۷.۴٪ · جذب از لید ۳.۸٪</li>
+        </ul>
+      </div>
+
+      <div class="action-box">
+        <h3>اگر نرخ تبدیل این شهرها شبیه تهران می‌شد</h3>
+        <p class="sub">مبنای مقایسه و حجم لید/ورود: فقط مرداد · لید→ورود تهران ۲۴.۶٪ · جذب از لید ۷.۱٪ · افزایش هفتگی = اختلاف با وضعیت مرداد ÷ (۳۰÷۷)</p>
+        <table>
+          <thead>
+            <tr>
+              <th>شهر</th>
+              <th>افزایش ورود هفتگی</th>
+              <th>افزایش جذب هفتگی</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>کرمان</td><td>۱۳۹</td><td>۴۷</td></tr>
+            <tr><td>مشهد</td><td>۲۹۱</td><td>۱۱۰</td></tr>
+            <tr><td>رشت</td><td>۸۷</td><td>۲۴</td></tr>
+            <tr><td>کرمانشاه</td><td>۷۹</td><td>۲۳</td></tr>
+            <tr><td>تبریز</td><td>۱۳۰</td><td>۵۷</td></tr>
+            <tr><td>قم</td><td>۵۰</td><td>۲۱</td></tr>
+            <tr><td>همدان</td><td>۴۰</td><td>۱۶</td></tr>
+            <tr><td>یزد</td><td>۳۰</td><td>۱۳</td></tr>
+            <tr class="ok"><td>جمع ۸ شهر</td><td>۸۴۶</td><td>۳۱۱</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="action-box">
+        <h3>اگر نرخ تبدیل این شهرها شبیه کرج می‌شد</h3>
+        <p class="sub">مبنای مقایسه و حجم لید/ورود: فقط مرداد · لید→ورود کرج ۲۱.۶٪ · جذب از لید ۶.۳٪ · افزایش هفتگی = اختلاف با وضعیت مرداد ÷ (۳۰÷۷)</p>
+        <table>
+          <thead>
+            <tr>
+              <th>شهر</th>
+              <th>افزایش ورود هفتگی</th>
+              <th>افزایش جذب هفتگی</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>کرمان</td><td>۱۱۳</td><td>۳۹</td></tr>
+            <tr><td>مشهد</td><td>۲۲۶</td><td>۹۳</td></tr>
+            <tr><td>رشت</td><td>۶۷</td><td>۱۸</td></tr>
+            <tr><td>کرمانشاه</td><td>۶۱</td><td>۱۸</td></tr>
+            <tr><td>تبریز</td><td>۱۰۰</td><td>۴۹</td></tr>
+            <tr><td>قم</td><td>۳۳</td><td>۱۶</td></tr>
+            <tr><td>همدان</td><td>۲۷</td><td>۱۳</td></tr>
+            <tr><td>یزد</td><td>۱۹</td><td>۱۰</td></tr>
+            <tr class="ok"><td>جمع ۸ شهر</td><td>۶۴۶</td><td>۲۵۶</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="action-box">
+        <h3>اگر نرخ تبدیل این شهرها شبیه شیراز می‌شد</h3>
+        <p class="sub">مبنای مقایسه و حجم لید/ورود: فقط مرداد · لید→ورود شیراز ۱۸.۷٪ · جذب از لید ۵.۱٪ · افزایش هفتگی = اختلاف با وضعیت مرداد ÷ (۳۰÷۷)</p>
+        <table>
+          <thead>
+            <tr>
+              <th>شهر</th>
+              <th>افزایش ورود هفتگی</th>
+              <th>افزایش جذب هفتگی</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>کرمان</td><td>۸۸</td><td>۲۹</td></tr>
+            <tr><td>مشهد</td><td>۱۶۳</td><td>۶۷</td></tr>
+            <tr><td>رشت</td><td>۴۷</td><td>۱۱</td></tr>
+            <tr><td>کرمانشاه</td><td>۴۳</td><td>۱۱</td></tr>
+            <tr><td>تبریز</td><td>۷۱</td><td>۳۷</td></tr>
+            <tr><td>قم</td><td>۱۷</td><td>۱۰</td></tr>
+            <tr><td>همدان</td><td>۱۵</td><td>۸</td></tr>
+            <tr><td>یزد</td><td>۷</td><td>۵</td></tr>
+            <tr class="ok"><td>جمع ۸ شهر</td><td>۴۵۱</td><td>۱۷۸</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="action-box">
+        <h3>گانت کمپین‌های ۱۴۰۵</h3>
+        <div class="gantt-wrap">
+          <table class="gantt">
+            <thead>
+              <tr>
+                <th>کمپین</th>
+                <th>مهر</th>
+                <th>آبان</th>
+                <th>آذر</th>
+                <th>نیمه اول دی</th>
+                <th>نیمه دوم دی</th>
+                <th>نیمه اول بهمن</th>
+                <th>نیمه دوم بهمن</th>
+                <th>نیمه اول اسفند</th>
+                <th>نیمه دوم اسفند</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name">TVC Musical</td>
+                <td><div class="bar">فعال</div></td>
+                <td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td>
+              </tr>
+              <tr>
+                <td class="name">Radio Musical</td>
+                <td><div class="bar">فعال</div></td>
+                <td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td>
+              </tr>
+              <tr>
+                <td class="name">Campaign #1</td>
+                <td class="empty"></td>
+                <td><div class="bar">TVC + BTL + Social + VOD<br>بیت استاپ</div></td>
+                <td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td>
+                <td><div class="bar">سکوت TVC</div></td>
+              </tr>
+              <tr>
+                <td class="name">Carvana</td>
+                <td class="empty"></td><td class="empty"></td>
+                <td colspan="2"><div class="bar span2">فعال</div></td>
+                <td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td>
+              </tr>
+              <tr>
+                <td class="name">360 Campaign</td>
+                <td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td>
+                <td colspan="4"><div class="bar span4">Campaign 360 · فوری</div></td>
+                <td class="empty"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    (function drawComboChart() {
+      const data = [
+        { label: "۳ تا ۹\nمرداد", ent: 920, l2e: 21, e2b: 21 },
+        { label: "۱۰ تا ۱۶\nمرداد", ent: 966, l2e: 19, e2b: 21 },
+        { label: "۱۷ تا ۲۳\nمرداد", ent: 601, l2e: 16, e2b: 22 },
+        { label: "۲۴ تا ۳۰\nمرداد", ent: 1068, l2e: 22, e2b: 26 },
+        { label: "۳۱م تا ۶\nشهریور", ent: 889, l2e: 23, e2b: 30 },
+        { label: "۷ تا ۱۳\nشهریور", ent: 788, l2e: 21, e2b: 32 },
+        { label: "۱۴ تا ۱۷\nشهریور", ent: 752, l2e: 23, e2b: 35 }
+      ];
+      const svg = document.getElementById("comboChart");
+      if (!svg) return;
+      const W = 1000, H = 280;
+      const pad = { t: 24, r: 56, b: 52, l: 56 };
+      const plotW = W - pad.l - pad.r;
+      const plotH = H - pad.t - pad.b;
+      const n = data.length;
+      const entMax = 1200;
+      const pctMax = 40;
+      const slot = plotW / n;
+      const barW = slot * 0.48;
+      const ns = "http://www.w3.org/2000/svg";
+      const el = (name, attrs) => {
+        const node = document.createElementNS(ns, name);
+        Object.entries(attrs || {}).forEach(([k, v]) => node.setAttribute(k, v));
+        return node;
+      };
+      const yEnt = v => pad.t + plotH * (1 - v / entMax);
+      const yPct = v => pad.t + plotH * (1 - v / pctMax);
+      const xCenter = i => pad.l + slot * i + slot / 2;
+
+      // grid + left axis (entrance)
+      for (let v = 0; v <= entMax; v += 200) {
+        const y = yEnt(v);
+        svg.appendChild(el("line", { x1: pad.l, y1: y, x2: W - pad.r, y2: y, class: "combo-grid" }));
+        const t = el("text", { x: pad.l - 8, y: y + 4, "text-anchor": "end", class: "combo-axis" });
+        t.textContent = String(v);
+        svg.appendChild(t);
+      }
+      // right axis (pct)
+      for (let v = 0; v <= pctMax; v += 10) {
+        const y = yPct(v);
+        const t = el("text", { x: W - pad.r + 8, y: y + 4, "text-anchor": "start", class: "combo-axis" });
+        t.textContent = v + "%";
+        svg.appendChild(t);
+      }
+
+      // bars
+      data.forEach((d, i) => {
+        const x = xCenter(i) - barW / 2;
+        const y = yEnt(d.ent);
+        const h = Math.max(2, pad.t + plotH - y);
+        svg.appendChild(el("rect", {
+          x, y, width: barW, height: h, rx: 4,
+          fill: "#5b8def", opacity: "0.9"
+        }));
+        const val = el("text", {
+          x: xCenter(i), y: y - 6, "text-anchor": "middle",
+          fill: "#e8eaed", "font-size": "11"
+        });
+        val.textContent = String(d.ent);
+        svg.appendChild(val);
+        const lab = el("text", {
+          x: xCenter(i), y: H - 18, "text-anchor": "middle", class: "combo-axis"
+        });
+        lab.innerHTML = "";
+        const lines = d.label.split("\n");
+        lines.forEach((ln, li) => {
+          const tp = el("tspan", { x: xCenter(i), dy: li === 0 ? 0 : 12 });
+          tp.textContent = ln;
+          lab.appendChild(tp);
+        });
+        // reposition first tspan
+        lab.setAttribute("y", H - 28 + (lines.length === 1 ? 6 : 0));
+        svg.appendChild(lab);
+      });
+
+      const drawLine = (key, color) => {
+        const pts = data.map((d, i) => xCenter(i) + "," + yPct(d[key])).join(" ");
+        svg.appendChild(el("polyline", {
+          points: pts, fill: "none", stroke: color, "stroke-width": "2.5",
+          "stroke-linejoin": "round", "stroke-linecap": "round"
+        }));
+        data.forEach((d, i) => {
+          svg.appendChild(el("circle", {
+            cx: xCenter(i), cy: yPct(d[key]), r: 4.5, fill: color, stroke: "#0f1115", "stroke-width": "1.5"
+          }));
+          const t = el("text", {
+            x: xCenter(i), y: yPct(d[key]) - 10, "text-anchor": "middle",
+            fill: color, "font-size": "10", "font-weight": "600"
+          });
+          t.textContent = d[key] + "%";
+          svg.appendChild(t);
+        });
+      };
+      drawLine("l2e", "#3dbe82");
+      drawLine("e2b", "#d4a017");
+    })();
+  </script>
+<script>
+    const BRANCH_WEEK_DATA_RAW = [{"b":"هپکو","c":"اراک","z":"","e":[18,82,108,61,111,82,87,41],"d":[14.64,19.29,10.89,19.82,14.64,15.54,10.25],"t":572,"cap":[0,0,0,88,83.2,83.2,54.5]},{"b":"بلوار چمران","c":"اصفهان","z":"","e":[16,73,63,36,73,69,66,48],"d":[13.04,11.25,6.43,13.04,12.32,11.79,12],"t":428,"cap":[0,0,0,69.6,65.2,63.7,42.3]},{"b":"بلوار کشاورز","c":"اصفهان","z":"","e":[11,77,74,47,83,56,46,45],"d":[13.75,13.21,8.39,14.82,10,8.21,11.25],"t":428,"cap":[0,0,0,79.8,50.1,47.2,35]},{"b":"جی","c":"اصفهان","z":"","e":[15,52,62,41,66,49,66,46],"d":[9.29,11.07,7.32,11.79,8.75,11.79,11.5],"t":382,"cap":[0,0,0,58.9,42.3,59.3,36]},{"b":"ارباب","c":"اصفهان","z":"","e":[5,65,54,35,68,47,55,35],"d":[11.61,9.64,6.25,12.14,8.39,9.82,8.75],"t":359,"cap":[0,0,0,47.7,36,58.9,44.3]},{"b":"آذر","c":"اصفهان","z":"","e":[6,47,60,41,76,52,43,22],"d":[8.39,10.71,7.32,13.57,9.29,7.68,5.5],"t":341,"cap":[0,0,0,68.6,57.9,61.3,44.3]},{"b":"آتشگاه","c":"اصفهان","z":"","e":[3,48,67,34,51,48,57,35],"d":[8.57,11.96,6.07,9.11,8.57,10.18,8.75],"t":340,"cap":[0,0,0,47.2,42.8,62.3,40.4]},{"b":"رزمندگان","c":"اصفهان","z":"","e":[0,0,0,0,0,0,0,27],"d":[0,0,0,0,0,0,6.75],"t":27,"cap":[0,0,0,0,0,3.4,24.3]},{"b":"آمل، بلوار بسیج","c":"آمل","z":"","e":[5,34,39,36,51,38,41,30],"d":[6.07,6.96,6.43,9.11,6.79,7.32,7.5],"t":269,"cap":[0,0,0,42.3,41.8,49.1,35.5]},{"b":"گلستان","c":"اهواز","z":"","e":[16,94,81,55,91,69,71,57],"d":[16.79,14.46,9.82,16.25,12.32,12.68,14.25],"t":518,"cap":[0,0,0,60.3,49.6,63.7,54.5]},{"b":"زیتون کارمندی","c":"اهواز","z":"","e":[15,101,109,65,63,60,62,53],"d":[18.04,19.46,11.61,11.25,10.71,11.07,13.25],"t":513,"cap":[0,0,0,57.9,48.2,55,51.1]},{"b":"چهارراه زند","c":"اهواز","z":"","e":[15,79,82,58,83,65,54,49],"d":[14.11,14.64,10.36,14.82,11.61,9.64,12.25],"t":470,"cap":[0,0,0,62.7,52.5,55.9,51.6]},{"b":"کیان آباد","c":"اهواز","z":"","e":[18,72,67,63,88,49,54,50],"d":[12.86,11.96,11.25,15.71,8.75,9.64,12.5],"t":443,"cap":[0,0,0,55,48.2,51.6,54.5]},{"b":"بابل","c":"بابل","z":"","e":[8,45,43,38,54,33,39,25],"d":[8.04,7.68,6.79,9.64,5.89,6.96,6.25],"t":277,"cap":[0,0,0,81.2,76.4,71.5,54.5]},{"b":"بلوار ساحلی","c":"بندرعباس","z":"","e":[9,59,69,47,67,79,49,35],"d":[10.54,12.32,8.39,11.96,14.11,8.75,8.75],"t":405,"cap":[0,0,0,55.4,51.6,49.1,35]},{"b":"بیرجند","c":"بیرجند","z":"","e":[3,22,30,23,27,16,14,20],"d":[3.93,5.36,4.11,4.82,2.86,2.5,5],"t":152,"cap":[0,0,0,81.2,76.4,76.4,54.5]},{"b":"ائل گلی یاغچیان","c":"تبریز","z":"","e":[23,87,73,49,89,83,72,39],"d":[15.54,13.04,8.75,15.89,14.82,12.86,9.75],"t":492,"cap":[0,0,0,69.1,76.4,64.2,42.8]},{"b":"کوچه باغ","c":"تبریز","z":"","e":[3,46,52,37,37,63,56,32],"d":[8.21,9.29,6.61,6.61,11.25,10,8],"t":323,"cap":[0,0,0,38.9,44.7,52,27.2]},{"b":"اتوبان ستاری بلوار لاله","c":"تهران","z":"West","e":[10,96,103,64,125,89,88,53],"d":[17.14,18.39,11.43,22.32,15.89,15.71,13.25],"t":618,"cap":[0,0,0,88.5,73.4,74.9,54.5]},{"b":"صادقیه","c":"تهران","z":"West","e":[14,106,84,56,103,82,87,53],"d":[18.93,15,10,18.39,14.64,15.54,13.25],"t":571,"cap":[0,0,0,77.3,63.7,77.8,54.5]},{"b":"تهرانسر","c":"تهران","z":"West","e":[12,91,114,58,90,93,56,65],"d":[16.25,20.36,10.36,16.07,16.61,10,16.25],"t":567,"cap":[0,0,0,81.7,76.4,62.3,54.5]},{"b":"پونک","c":"تهران","z":"West","e":[13,119,86,50,99,81,85,44],"d":[21.25,15.36,8.93,17.68,14.46,15.18,11],"t":564,"cap":[0,0,0,66.6,64.2,69.1,44.7]},{"b":"ستارخان","c":"تهران","z":"West","e":[31,91,101,48,98,98,74,43],"d":[16.25,18.04,8.57,17.5,17.5,13.21,10.75],"t":553,"cap":[0,0,0,81.7,83.2,74.9,54.5]},{"b":"خانی آباد","c":"تهران","z":"South","e":[11,95,86,53,90,84,74,51],"d":[16.96,15.36,9.46,16.07,15,13.21,12.75],"t":533,"cap":[0,0,0,81.7,78.3,68.1,54.5]},{"b":"دریاچه چیتگر","c":"تهران","z":"West","e":[9,73,106,57,100,79,66,44],"d":[13.04,18.93,10.18,17.86,14.11,11.79,11],"t":525,"cap":[0,0,0,79.3,76.4,74.9,44.7]},{"b":"سه راه آذری خیابان قزوین","c":"تهران","z":"South","e":[14,80,90,49,82,81,68,54],"d":[14.29,16.07,8.75,14.64,14.46,12.14,13.5],"t":504,"cap":[0,0,0,71,76.4,74.4,54.5]},{"b":"تهرانپارس میدان پروین","c":"تهران","z":"East","e":[12,71,93,46,90,87,64,40],"d":[12.68,16.61,8.21,16.07,15.54,11.43,10],"t":491,"cap":[0,0,0,81.7,76.4,74.9,54.5]},{"b":"هنگام","c":"تهران","z":"East","e":[24,80,96,52,89,80,54,37],"d":[14.29,17.14,9.29,15.89,14.29,9.64,9.25],"t":488,"cap":[0,0,0,81.7,78.3,74.9,54.5]},{"b":"شیخ بهایی","c":"تهران","z":"North","e":[12,85,71,46,89,68,65,46],"d":[15.18,12.68,8.21,15.89,12.14,11.61,11.5],"t":470,"cap":[0,0,0,79.3,71.5,75.4,54.5]},{"b":"شهران","c":"تهران","z":"West","e":[6,74,87,50,88,75,58,28],"d":[13.21,15.54,8.93,15.71,13.39,10.36,7],"t":460,"cap":[0,0,0,76.9,76.4,81.7,54.5]},{"b":"پاسداران","c":"تهران","z":"North","e":[12,82,66,47,93,66,69,25],"d":[14.64,11.79,8.39,16.61,11.79,12.32,6.25],"t":448,"cap":[0,0,0,81.7,76.4,82.2,54.5]},{"b":"حکیمیه","c":"تهران","z":"East","e":[9,75,73,46,92,70,52,38],"d":[13.39,13.04,8.21,16.43,12.5,9.29,9.5],"t":446,"cap":[0,0,0,88.5,69.6,63.2,43.3]},{"b":"ایران مال","c":"تهران","z":"West","e":[10,62,72,46,100,84,52,27],"d":[11.07,12.86,8.21,17.86,15,9.29,6.75],"t":443,"cap":[0,0,0,77.8,83.2,74.4,54.5]},{"b":"میرداماد","c":"تهران","z":"North","e":[7,74,78,49,88,75,41,33],"d":[13.21,13.93,8.75,15.71,13.39,7.32,8.25],"t":438,"cap":[0,0,0,81.7,76.4,75.4,54.5]},{"b":"شهرری","c":"تهران","z":"South","e":[11,90,74,36,64,67,60,46],"d":[16.07,13.21,6.43,11.43,11.96,10.71,11.5],"t":437,"cap":[0,0,0,68.6,64.2,69.6,54.5]},{"b":"جنت آباد شمالی سیمون بولیوار","c":"تهران","z":"North","e":[14,71,76,55,78,69,58,27],"d":[12.68,13.57,9.82,13.93,12.32,10.36,6.75],"t":434,"cap":[0,0,0,72.5,72.5,74.9,54.5]},{"b":"پیروزی بلوار ابوذر","c":"تهران","z":"East","e":[11,80,69,44,70,80,52,30],"d":[14.29,12.32,7.86,12.5,14.29,9.29,7.5],"t":425,"cap":[0,0,0,67.1,77.3,74.9,54.5]},{"b":"خیابان دولت","c":"تهران","z":"North","e":[6,67,47,49,87,74,60,23],"d":[11.96,8.39,8.75,15.54,13.21,10.71,5.75],"t":407,"cap":[0,0,0,81.7,76.4,72.5,47.2]},{"b":"شهرری میدان معلم","c":"تهران","z":"South","e":[17,67,47,41,63,80,67,39],"d":[11.96,8.39,7.32,11.25,14.29,11.96,9.75],"t":404,"cap":[0,0,0,70,75.9,74.4,54.5]},{"b":"لویزان","c":"تهران","z":"North","e":[10,57,64,53,80,76,41,31],"d":[10.18,11.43,9.46,14.29,13.57,7.32,7.75],"t":402,"cap":[0,0,0,75.9,76.4,75.4,54.5]},{"b":"تهرانسر دو","c":"تهران","z":"West","e":[7,63,67,49,95,53,40,34],"d":[11.25,11.96,8.75,16.96,9.46,7.14,8.5],"t":401,"cap":[0,0,0,88.5,50.1,46.2,35.5]},{"b":"دلاوران","c":"تهران","z":"East","e":[10,54,53,35,114,66,45,29],"d":[9.64,9.46,6.25,20.36,11.79,8.04,7.25],"t":396,"cap":[0,0,0,88.5,76.4,73,54.5]},{"b":"پیروزی چهارصد دستگاه","c":"تهران","z":"East","e":[9,48,66,29,79,54,62,30],"d":[8.57,11.79,5.18,14.11,9.64,11.07,7.5],"t":368,"cap":[0,0,0,69.6,54.5,81.7,54.5]},{"b":"سهروردی","c":"تهران","z":"Center","e":[3,52,57,39,73,58,46,26],"d":[9.29,10.18,6.96,13.04,10.36,8.21,6.5],"t":351,"cap":[0,0,0,60.8,55.9,58.4,35]},{"b":"ایران خودرو","c":"تهران","z":"West","e":[6,51,43,36,55,53,48,30],"d":[9.11,7.68,6.43,9.82,9.46,8.57,7.5],"t":316,"cap":[0,0,0,53,48.6,50.6,35]},{"b":"خیابان دماوند","c":"تهران","z":"East","e":[14,86,65,53,71,0,13,23],"d":[15.36,11.61,9.46,12.68,0,2.32,5.75],"t":311,"cap":[0,0,0,64.2,0,19,54.5]},{"b":"قلهک","c":"تهران","z":"North","e":[14,42,62,33,63,51,41,13],"d":[7.5,11.07,5.89,11.25,9.11,7.32,3.25],"t":305,"cap":[0,0,0,54.5,60.3,55,40.9]},{"b":"مرکز خودرویی چیتگر","c":"تهران","z":"West","e":[6,39,51,28,59,53,39,26],"d":[6.96,9.11,5,10.54,9.46,6.96,6.5],"t":295,"cap":[0,0,0,51.6,50.1,47.2,36.5]},{"b":"افسریه","c":"تهران","z":"South","e":[14,33,54,25,53,56,29,29],"d":[5.89,9.64,4.46,9.46,10,5.18,7.25],"t":279,"cap":[0,0,0,55,59.8,54,37.9]},{"b":"خاوران","c":"تهران","z":"South","e":[1,38,34,28,64,40,34,20],"d":[6.79,6.07,5,11.43,7.14,6.07,5],"t":258,"cap":[0,0,0,62.7,53.5,62.7,37]},{"b":"سعادت آباد","c":"تهران","z":"North","e":[0,0,0,0,57,56,75,51],"d":[0,0,0,10.18,10,13.39,12.75],"t":239,"cap":[0,0,0,33.6,48.2,67.1,54.5]},{"b":"نوبنیاد","c":"تهران","z":"North","e":[0,0,0,0,0,0,13,21],"d":[0,0,0,0,0,2.32,5.25],"t":34,"cap":[0,0,0,0,0,26.8,36]},{"b":"سه راه تهرانپارس دوران","c":"تهران","z":"East","e":[0,0,0,0,0,0,17,12],"d":[0,0,0,0,0,3.04,3],"t":29,"cap":[0,0,8.3,76.4,68.6,27.2,35.5]},{"b":"فرجام","c":"تهران","z":"East","e":[0,0,0,0,0,0,3,15],"d":[0,0,0,0,0,0.54,3.75],"t":18,"cap":[0,0,0,0,0,15.6,49.1]},{"b":"ضیابری","c":"رشت","z":"","e":[14,84,91,47,99,72,68,64],"d":[15,16.25,8.39,17.68,12.86,12.14,16],"t":525,"cap":[0,0,0,55.4,57.4,50.6,36.5]},{"b":"زاهدان","c":"زاهدان","z":"","e":[5,36,44,35,50,26,31,18],"d":[6.43,7.86,6.25,8.93,4.64,5.54,4.5],"t":240,"cap":[0,0,0,81.2,76.4,76.4,54.5]},{"b":"زنجان، پروین اعتصامی","c":"زنجان","z":"","e":[5,57,76,31,71,56,43,26],"d":[10.18,13.57,5.54,12.68,10,7.68,6.5],"t":360,"cap":[0,0,0,81.2,83.2,76.4,54.5]},{"b":"ساری، بلوار پاسداران","c":"ساری","z":"","e":[3,61,55,31,47,46,51,30],"d":[10.89,9.82,5.54,8.39,8.21,9.11,7.5],"t":321,"cap":[0,0,0,40.4,42.3,49.6,27.2]},{"b":"شاهرود، هفت تیر","c":"شاهرود","z":"","e":[1,21,34,22,22,15,21,10],"d":[3.75,6.07,3.93,3.93,2.68,3.75,2.5],"t":145,"cap":[0,0,0,81.2,76.4,76.4,54.5]},{"b":"امیرکبیر","c":"شیراز","z":"","e":[7,83,93,40,77,70,78,45],"d":[14.82,16.61,7.14,13.75,12.5,13.93,11.25],"t":486,"cap":[0,0,0,69.6,58.4,69.1,43.3]},{"b":"بلوار صنایع","c":"شیراز","z":"","e":[4,69,74,43,80,75,63,41],"d":[12.32,13.21,7.68,14.29,13.39,11.25,10.25],"t":445,"cap":[0,0,0,66.2,61.3,57.9,42.3]},{"b":"بلوار مدرس","c":"شیراز","z":"","e":[8,80,65,50,85,54,47,42],"d":[14.29,11.61,8.93,15.18,9.64,8.39,10.5],"t":423,"cap":[0,0,0,74.4,57.4,60.8,45.7]},{"b":"قدمگاه","c":"شیراز","z":"","e":[16,64,47,44,53,61,48,38],"d":[11.43,8.39,7.86,9.46,10.89,8.57,9.5],"t":355,"cap":[0,0,0,32.6,37.5,39.4,37]},{"b":"حدادی","c":"شیراز","z":"","e":[3,53,63,31,61,45,49,27],"d":[9.46,11.25,5.54,10.89,8.04,8.75,6.75],"t":329,"cap":[0,0,0,59.3,50.1,70.5,38.9]},{"b":"میرعماد","c":"قزوین","z":"","e":[14,91,105,59,99,77,75,48],"d":[16.25,18.75,10.54,17.68,13.75,13.39,12],"t":554,"cap":[0,0,0,88,76.4,83.2,54.5]},{"b":"قم، هنرستان","c":"قم","z":"","e":[19,91,103,61,97,99,83,43],"d":[16.25,18.39,10.89,17.32,17.68,14.82,10.75],"t":577,"cap":[0,0,0,87.6,83.2,83.2,54.5]},{"b":"فردیس","c":"کرج","z":"","e":[29,106,119,64,128,125,110,69],"d":[18.93,21.25,11.43,22.86,22.32,19.64,17.25],"t":721,"cap":[0,0,0,88,83.7,83.2,54.5]},{"b":"عظیمیه","c":"کرج","z":"","e":[18,90,95,61,123,96,121,58],"d":[16.07,16.96,10.89,21.96,17.14,21.61,14.5],"t":644,"cap":[0,0,0,88,83.2,83.2,54.5]},{"b":"گوهردشت","c":"کرج","z":"","e":[17,75,62,40,66,61,59,47],"d":[13.39,11.07,7.14,11.79,10.89,10.54,11.75],"t":410,"cap":[0,0,0,78.3,65.7,53.5,50.6]},{"b":"میدان کرج","c":"کرج","z":"","e":[3,52,51,33,55,50,42,26],"d":[9.29,9.11,5.89,9.82,8.93,7.5,6.5],"t":309,"cap":[0,0,0,55.9,51.1,51.1,33.1]},{"b":"مهرشهر","c":"کرج","z":"","e":[8,50,49,23,53,49,40,24],"d":[8.93,8.75,4.11,9.46,8.75,7.14,6],"t":288,"cap":[0,0,0,48.2,51.1,41.3,33.1]},{"b":"بلوار جمهوری","c":"کرمان","z":"","e":[14,72,83,52,98,78,70,61],"d":[12.86,14.82,9.29,17.5,13.93,12.5,15.25],"t":514,"cap":[0,0,0,78.8,52,65.7,54.5]},{"b":"کرمانشاه نوبهار","c":"کرمانشاه","z":"","e":[19,72,69,42,88,73,71,51],"d":[12.86,12.32,7.5,15.71,13.04,12.68,12.75],"t":466,"cap":[0,0,0,68.1,75.4,71.5,51.1]},{"b":"گرگان، خیابان وش","c":"گرگان","z":"","e":[5,39,52,26,59,51,45,37],"d":[6.96,9.29,4.64,10.54,9.11,8.04,9.25],"t":309,"cap":[0,0,0,88,83.2,83.2,54.5]},{"b":"گنبد، هلال احمر","c":"گنبد","z":"","e":[2,20,26,23,32,20,15,19],"d":[3.57,4.64,4.11,5.71,3.57,2.68,4.75],"t":155,"cap":[0,0,0,81.2,76.4,76.4,54.5]},{"b":"وکیل آباد","c":"مشهد","z":"","e":[11,58,89,36,73,57,65,53],"d":[10.36,15.89,6.43,13.04,10.18,11.61,13.25],"t":431,"cap":[0,0,0,71.5,71.5,58.9,53]},{"b":"بلوار پیروزی","c":"مشهد","z":"","e":[10,58,67,44,76,67,62,47],"d":[10.36,11.96,7.86,13.57,11.96,11.07,11.75],"t":421,"cap":[0,0,0,56.4,49.6,51.6,51.1]},{"b":"الهیه","c":"مشهد","z":"","e":[18,63,63,42,45,76,63,62],"d":[11.25,11.25,7.5,8.04,13.57,11.25,15.5],"t":414,"cap":[0,0,0,52,56.4,47.2,47.7]},{"b":"خیابان امام خمینی","c":"مشهد","z":"","e":[7,63,71,45,85,60,0,0],"d":[11.25,12.68,8.04,15.18,10.71,0,0],"t":324,"cap":[0,0,0,80.3,53.5,0,0]},{"b":"بلوار شاهد","c":"همدان","z":"","e":[11,57,63,46,97,64,58,35],"d":[10.18,11.25,8.21,17.32,11.43,10.36,8.75],"t":420,"cap":[0,0,0,88,83.2,76.4,54.5]},{"b":"یزد، شهرک دانشگاه","c":"یزد","z":"","e":[9,64,83,39,83,71,58,33],"d":[11.43,14.82,6.96,14.82,12.68,10.36,8.25],"t":431,"cap":[0,0,0,88,83.2,76.4,54.5]}];
+    const BRANCH_WEEK_DATA = BRANCH_WEEK_DATA_RAW.filter(r => !/محل|حضور/.test(r.b || ''));
+    const zoneMap = {West:'غرب',North:'شمال',East:'شرق',South:'جنوب',Center:'مرکز'};
+    const WEEK_OPTS = [
+      { i: 0, label: '۳ تا ۹ مرداد', wd: 5.6 },
+      { i: 1, label: '۱۰ تا ۱۶ مرداد', wd: 5.6 },
+      { i: 2, label: '۱۷ تا ۲۳ مرداد', wd: 5.6 },
+      { i: 3, label: '۲۴ تا ۳۰ مرداد', wd: 5.6 },
+      { i: 4, label: '۳۱ مرداد تا ۶ شهریور', wd: 5.6 },
+      { i: 5, label: '۷ تا ۱۳ شهریور', wd: 5.6 },
+      { i: 6, label: '۱۴ تا ۱۷ شهریور', wd: 4.0 }
+    ];
+    function dayOf(r, wi) {
+      const e = weekEnt(r, wi);
+      const wd = WEEK_OPTS[wi].wd || 1;
+      return Math.round((e / wd) * 100) / 100;
+    }
+    function weekEnt(r, wi) {
+      return (r.e && r.e[wi + 1] != null) ? Number(r.e[wi + 1]) || 0 : 0;
+    }
+    function weekCap(r, wi) {
+      return (r.cap && r.cap[wi] != null) ? Number(r.cap[wi]) || 0 : 0;
+    }
+    function weekUtil(r, wi) {
+      const c = weekCap(r, wi);
+      if (c <= 0) return null;
+      return Math.round((weekEnt(r, wi) / c) * 1000) / 10;
+    }
+    function syncTehranFilters() {
+      const city = document.getElementById('cityFilter').value;
+      const zoneWrap = document.getElementById('zoneFilterWrap');
+      const branchWrap = document.getElementById('branchFilterWrap');
+      const zoneSel = document.getElementById('zoneFilter');
+      const branchSel = document.getElementById('branchFilter');
+      const isTehran = city === 'تهران';
+      zoneWrap.classList.toggle('show', isTehran);
+      branchWrap.classList.toggle('show', !!city);
+      if (!isTehran) zoneSel.value = '';
+      let pool = BRANCH_WEEK_DATA.slice();
+      if (city) pool = pool.filter(r => r.c === city);
+      if (isTehran && zoneSel.value) pool = pool.filter(r => r.z === zoneSel.value);
+      const prev = branchSel.value;
+      branchSel.innerHTML = '<option value="">همه شعب</option>';
+      pool.sort((a,b)=>(a.b||'').localeCompare(b.b||'','fa')).forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.b; opt.textContent = r.b;
+        branchSel.appendChild(opt);
+      });
+      if ([...branchSel.options].some(o => o.value === prev)) branchSel.value = prev;
+      else branchSel.value = '';
+    }
+    function filteredRows() {
+      const city = document.getElementById('cityFilter').value;
+      const zone = document.getElementById('zoneFilter').value;
+      const branch = document.getElementById('branchFilter').value;
+      const q = (document.getElementById('branchSearch').value || '').trim();
+      let rows = BRANCH_WEEK_DATA.slice();
+      if (city) rows = rows.filter(r => r.c === city);
+      if (city === 'تهران' && zone) rows = rows.filter(r => r.z === zone);
+      if (branch) rows = rows.filter(r => r.b === branch);
+      if (q) rows = rows.filter(r => (r.b || '').includes(q));
+      return rows;
+    }
+    function renderBranchTable() {
+      const wi = Number(document.getElementById('weekFilter').value);
+      const rows = filteredRows();
+      const root = document.getElementById('cityAccordion');
+      document.getElementById('branchCount').textContent = rows.length + ' شعبه';
+
+      const byCity = {};
+      rows.forEach(r => {
+        if (!byCity[r.c]) byCity[r.c] = [];
+        byCity[r.c].push(r);
+      });
+      Object.keys(byCity).forEach(c => {
+        byCity[c].sort((a,b) => dayOf(b, wi) - dayOf(a, wi));
+      });
+      const cityOrder = Object.keys(byCity).sort((a,b) => {
+        const ma = Math.max(...byCity[a].map(r => dayOf(r, wi)));
+        const mb = Math.max(...byCity[b].map(r => dayOf(r, wi)));
+        return mb - ma;
+      });
+
+      let html = '';
+      cityOrder.forEach(city => {
+        const list = byCity[city];
+        const sumD = list.reduce((s,r) => s + dayOf(r, wi), 0);
+        const sumE = list.reduce((s,r) => s + weekEnt(r, wi), 0);
+        html += '<details class="city-acc">';
+        html += '<summary><span>' + city + ' · ' + list.length + ' شعبه</span>';
+        html += '<span class="city-meta">روزانه شهر: ' + sumD.toFixed(1) + ' · ورود هفته: ' + sumE + '</span></summary>';
+        html += '<table><thead><tr><th>شعبه</th><th>منطقه</th><th>ورود به روزکاری</th><th>ورود هفته</th><th>ظرفیت واقعی ورود</th><th>% پرشدگی</th></tr></thead><tbody>';
+        list.forEach(r => {
+          const z = r.z ? (zoneMap[r.z] || r.z) : '—';
+          const cap = weekCap(r, wi);
+          const util = weekUtil(r, wi);
+          const capTxt = cap > 0 ? cap.toFixed(1) : '—';
+          const utilTxt = util == null ? '—' : (util + '%');
+          html += '<tr><td>' + r.b + '</td><td>' + z + '</td><td class="num">' + dayOf(r, wi) + '</td><td class="num">' + weekEnt(r, wi) + '</td><td class="num">' + capTxt + '</td><td class="num">' + utilTxt + '</td></tr>';
+        });
+        html += '</tbody></table></details>';
+      });
+      root.innerHTML = html;
+      renderZoneReview(wi);
+    }
+    function renderSection3Zones() {
+      const sel = document.getElementById('zoneWeekFilter');
+      if (!sel) return;
+      const wi = Number(sel.value);
+      const tehran = BRANCH_WEEK_DATA.filter(r => r.c === 'تهران');
+      const order = ['West','North','East','South','Center'];
+      const rows = order.map(z => {
+        const g = tehran.filter(r => r.z === z);
+        const n = g.length || 1;
+        const ent = g.reduce((s,r) => s + weekEnt(r, wi), 0);
+        const dailySum = g.reduce((s,r) => s + dayOf(r, wi), 0);
+        const perBranch = dailySum / n;
+        return { z, n: g.length, ent, dailySum, perBranch };
+      });
+      const totalEnt = rows.reduce((s,r) => s + r.ent, 0) || 1;
+      const totalDaily = rows.reduce((s,r) => s + r.dailySum, 0) || 1;
+      rows.forEach(r => {
+        r.pctEnt = 100 * r.ent / totalEnt;
+        r.pctDaily = 100 * r.dailySum / totalDaily;
+      });
+      rows.sort((a,b) => b.dailySum - a.dailySum);
+
+      const cards = document.getElementById('zoneCards');
+      cards.innerHTML = rows.map(r =>
+        '<div class="zone"><h4>' + zoneMap[r.z] + ' · ' + r.n + ' شعبه</h4>' +
+        '<div class="big">' + r.perBranch.toFixed(1) + '</div>' +
+        '<div class="m">میانگین ورود به شعبه / روز · ' + r.pctEnt.toFixed(1) + '% از کل</div></div>'
+      ).join('');
+
+      const body = document.getElementById('zoneMainBody');
+      body.innerHTML = rows.map(r =>
+        '<tr><td>' + zoneMap[r.z] + '</td><td>' + r.n + '</td>' +
+        '<td class="num">' + r.ent + '</td>' +
+        '<td class="num">' + r.dailySum.toFixed(1) + '</td>' +
+        '<td class="num">' + r.pctEnt.toFixed(1) + '%</td>' +
+        '<td class="num">' + r.perBranch.toFixed(2) + '</td></tr>'
+      ).join('');
+    }
+    function renderZoneReview(wi) {
+      const body = document.getElementById('zoneReviewBody');
+      if (!body) return;
+      const tehran = BRANCH_WEEK_DATA.filter(r => r.c === 'تهران');
+      const order = ['West','North','East','South','Center'];
+      const rows = order.map(z => {
+        const g = tehran.filter(r => r.z === z);
+        const n = g.length || 1;
+        const dailySum = g.reduce((s,r) => s + dayOf(r, wi), 0);
+        const perBranch = dailySum / n;
+        const ent = g.reduce((s,r) => s + weekEnt(r, wi), 0);
+        return { z, n: g.length, perBranch, ent };
+      }).sort((a,b) => b.perBranch - a.perBranch);
+      body.innerHTML = rows.map(r =>
+        '<tr><td>' + zoneMap[r.z] + '</td><td>' + r.n + '</td><td class="num">' + r.perBranch.toFixed(2) + '</td><td class="num">' + r.ent + '</td></tr>'
+      ).join('');
+    }
+    (function initBranchSection(){
+      const weekSel = document.getElementById('weekFilter');
+      const zoneWeekSel = document.getElementById('zoneWeekFilter');
+      if (!weekSel) return;
+      WEEK_OPTS.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = String(w.i);
+        opt.textContent = w.label;
+        weekSel.appendChild(opt);
+        if (zoneWeekSel) {
+          const opt2 = document.createElement('option');
+          opt2.value = String(w.i);
+          opt2.textContent = w.label;
+          zoneWeekSel.appendChild(opt2);
+        }
+      });
+      weekSel.value = String(WEEK_OPTS.length - 1);
+      if (zoneWeekSel) {
+        zoneWeekSel.value = String(WEEK_OPTS.length - 1);
+        zoneWeekSel.addEventListener('change', renderSection3Zones);
+      }
+
+      const sel = document.getElementById('cityFilter');
+      const cities = [...new Set(BRANCH_WEEK_DATA.map(r => r.c))].sort((a,b)=>a.localeCompare(b,'fa'));
+      cities.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c; sel.appendChild(opt);
+      });
+      const rerender = () => { syncTehranFilters(); renderBranchTable(); };
+      weekSel.addEventListener('change', renderBranchTable);
+      sel.addEventListener('change', rerender);
+      document.getElementById('zoneFilter').addEventListener('change', rerender);
+      document.getElementById('branchFilter').addEventListener('change', renderBranchTable);
+      document.getElementById('branchSearch').addEventListener('input', renderBranchTable);
+      syncTehranFilters();
+      renderBranchTable();
+      renderSection3Zones();
+    })();
+
+    (function drawOtpChart() {
+      var NS = "http://www.w3.org/2000/svg";
+      var C = {
+        grid: "#2b2b2b", axis: "#3a3a3a", text3: "#757575", text2: "#a3a3a3",
+        accent: "#4a9eff"
+      };
+      function el(name, attrs, text) {
+        var n = document.createElementNS(NS, name);
+        for (var k in attrs) n.setAttribute(k, attrs[k]);
+        if (text !== undefined) n.textContent = text;
+        return n;
+      }
+      var svg = document.getElementById("otpChart");
+      if (!svg) return;
+      var nf = new Intl.NumberFormat("en-US");
+      var cats = ["سه هفته قبل", "دو هفته قبل", "هفته قبل", "این هفته"];
+      var series = [
+        { name: "Organic OTP", data: [10283, 8924, 7141, 7442], color: C.accent }
+      ];
+      var L = 60, R = 616, T = 24, B = 200;
+      var yMin = 7000, yMax = 10500, ticks = 6;
+      var x = function (i) { return L + (R - L) * (i / (cats.length - 1)); };
+      var y = function (v) { return B - (v - yMin) / (yMax - yMin) * (B - T); };
+
+      for (var t = 0; t < ticks; t++) {
+        var val = yMin + (yMax - yMin) * (t / (ticks - 1));
+        var yy = y(val);
+        svg.appendChild(el("line", { x1: L, x2: R, y1: yy, y2: yy, stroke: C.grid, "stroke-width": 1 }));
+        svg.appendChild(el("text", { x: L - 10, y: yy + 4, "text-anchor": "end", "font-size": 10, fill: C.text3 }, nf.format(Math.round(val))));
+      }
+      svg.appendChild(el("line", { x1: L, x2: R, y1: B, y2: B, stroke: C.axis, "stroke-width": 1 }));
+      cats.forEach(function (c, i) {
+        svg.appendChild(el("text", { x: x(i), y: B + 20, "text-anchor": "middle", "font-size": 11, fill: C.text2 }, c));
+      });
+      svg.appendChild(el("text", { x: (L + R) / 2, y: 240, "text-anchor": "middle", "font-size": 10, fill: C.text3 }, "هفته"));
+      svg.appendChild(el("text", { x: 14, y: (T + B) / 2, "text-anchor": "middle", "font-size": 10, fill: C.text3, transform: "rotate(-90 14 " + ((T + B) / 2) + ")" }, "OTP ارگانیک، شنبه–سه‌شنبه"));
+
+      series.forEach(function (s) {
+        var d = s.data.map(function (v, i) { return (i ? "L" : "M") + x(i) + " " + y(v); }).join(" ");
+        svg.appendChild(el("path", { d: d, fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round" }));
+        s.data.forEach(function (v, i) {
+          var isTop = v >= Math.max.apply(null, series.map(function (o) { return o.data[i]; }));
+          svg.appendChild(el("circle", { cx: x(i), cy: y(v), r: 3.5, fill: s.color }));
+          svg.appendChild(el("text", { x: x(i) + (i === 0 ? 18 : 0), y: y(v) + (isTop ? -11 : 15), "text-anchor": "middle", "font-size": 10, fill: C.text2 }, nf.format(v)));
+        });
+      });
+    })();
+</script>
+</body>
+</html>
